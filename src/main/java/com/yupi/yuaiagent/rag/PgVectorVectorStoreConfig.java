@@ -5,6 +5,8 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,8 +16,8 @@ import java.util.List;
 import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgDistanceType.COSINE_DISTANCE;
 import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgIndexType.HNSW;
 
-// 为方便开发调试和部署，临时注释，如果需要使用 PgVector 存储知识库，取消注释即可
-//@Configuration
+// 涓烘柟渚垮紑鍙戣皟璇曞拰閮ㄧ讲锛屼复鏃舵敞閲婏紝濡傛灉闇€瑕佷娇鐢?PgVector 瀛樺偍鐭ヨ瘑搴擄紝鍙栨秷娉ㄩ噴鍗冲彲
+@Configuration
 public class PgVectorVectorStoreConfig {
 
     @Resource
@@ -32,9 +34,15 @@ public class PgVectorVectorStoreConfig {
                 .vectorTableName("vector_store")     // Optional: defaults to "vector_store"
                 .maxDocumentBatchSize(10000)         // Optional: defaults to 10000
                 .build();
-        // 加载文档
-        List<Document> documents = loveAppDocumentLoader.loadMarkdowns();
-        vectorStore.add(documents);
         return vectorStore;
+    }
+
+    @Bean
+    public ApplicationRunner pgVectorVectorStoreInitializer(
+            @Qualifier("pgVectorVectorStore") VectorStore pgVectorVectorStore) {
+        return args -> {
+            List<Document> documents = loveAppDocumentLoader.loadMarkdowns();
+            pgVectorVectorStore.add(documents);
+        };
     }
 }
